@@ -79,6 +79,7 @@ public class TestWorldProperties {
     private PlayerSpawnLocationEvent playerNewSpawnLocationEvent;
     private PlayerSpawnLocationEvent playerSpawnLocationEvent;
     private PlayerRespawnEvent playerRespawnBed;
+    private PlayerRespawnEvent playerRespawnAnchor;
     private PlayerRespawnEvent playerRespawnNormal;
     private HumanEntity mockHumanEntity;
     private EntityRegainHealthEvent entityRegainHealthEvent;
@@ -203,6 +204,8 @@ public class TestWorldProperties {
         core.getPlayerListener().playerRespawn(playerRespawnBed);
         // bedrespawn is on so nothing should happen
         verify(playerRespawnBed, never()).setRespawnLocation(any(Location.class));
+        core.getPlayerListener().playerRespawn(playerRespawnAnchor);
+        verify(playerRespawnAnchor, never()).setRespawnLocation(any(Location.class));
         core.getPlayerListener().playerRespawn(playerRespawnNormal);
         verify(playerRespawnNormal).setRespawnLocation(mvWorld.getSpawnLocation());
 
@@ -303,6 +306,8 @@ public class TestWorldProperties {
         core.getPlayerListener().playerRespawn(playerRespawnBed);
         // bedrespawn is off so something should happen (and we've set respawn to nether...)
         verify(playerRespawnBed).setRespawnLocation(netherWorld.getSpawnLocation());
+        core.getPlayerListener().playerRespawn(playerRespawnAnchor);
+        verify(playerRespawnAnchor).setRespawnLocation(netherWorld.getSpawnLocation());
         core.getPlayerListener().playerRespawn(playerRespawnNormal);
         verify(playerRespawnNormal).setRespawnLocation(netherWorld.getSpawnLocation());
 
@@ -378,8 +383,13 @@ public class TestWorldProperties {
         when(playerNewSpawnLocationEvent.getPlayer()).thenReturn(mockNewPlayer);
         // player respawn
         playerRespawnBed = PowerMockito.mock(PlayerRespawnEvent.class);
+        playerRespawnAnchor = PowerMockito.mock(PlayerRespawnEvent.class);
         when(playerRespawnBed.getPlayer()).thenReturn(mockPlayer);
         when(playerRespawnBed.isBedSpawn()).thenReturn(true);
+        when(playerRespawnBed.isAnchorSpawn()).thenReturn(false);
+        when(playerRespawnAnchor.getPlayer()).thenReturn(mockPlayer);
+        when(playerRespawnAnchor.isBedSpawn()).thenReturn(false);
+        when(playerRespawnAnchor.isAnchorSpawn()).thenReturn(true);
         playerRespawnNormal = PowerMockito.mock(PlayerRespawnEvent.class);
         when(playerRespawnNormal.getPlayer()).thenReturn(mockPlayer);
         when(playerRespawnNormal.isBedSpawn()).thenReturn(false);

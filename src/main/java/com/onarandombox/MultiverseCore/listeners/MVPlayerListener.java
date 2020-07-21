@@ -70,8 +70,8 @@ public class MVPlayerListener implements Listener {
         }
 
 
-        if (mvWorld.getBedRespawn() && event.isBedSpawn()) {
-            this.plugin.log(Level.FINE, "Spawning " + event.getPlayer().getName() + " at their bed");
+        if (mvWorld.getBedRespawn() && (event.isBedSpawn() || event.isAnchorSpawn())) {
+            this.plugin.log(Level.FINE, "Spawning " + event.getPlayer().getName() + " at their respawn point (bed/respawn anchor).");
             return;
         }
 
