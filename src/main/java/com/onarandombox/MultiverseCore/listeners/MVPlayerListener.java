@@ -27,11 +27,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 /**
  * Multiverse's {@link Listener} for players.
@@ -103,18 +103,18 @@ public class MVPlayerListener implements Listener {
     }
 
     /**
-     * This method is called when a player joins the server.
+     * This method is called when the server is deciding the player's spawn location.
      * @param event The Event that was fired.
      */
     @EventHandler
-    public void playerJoin(PlayerJoinEvent event) {
+    public void playerSpawnLocation(PlayerSpawnLocationEvent event) {
         Player p = event.getPlayer();
         if (!p.hasPlayedBefore()) {
             this.plugin.log(Level.FINER, "Player joined for the FIRST time!");
             if (plugin.getMVConfig().getFirstSpawnOverride()) {
-                this.plugin.log(Level.FINE, "Moving NEW player to(firstspawnoverride): "
+                this.plugin.log(Level.FINE, "Moving NEW player to (firstspawnoverride): "
                         + worldManager.getFirstSpawnWorld().getSpawnLocation());
-                this.sendPlayerToDefaultWorld(p);
+                event.setSpawnLocation(plugin.getMVWorldManager().getFirstSpawnWorld().getSpawnLocation());
             }
             return;
         } else {
@@ -122,7 +122,7 @@ public class MVPlayerListener implements Listener {
             if (this.plugin.getMVConfig().getEnforceAccess() // check this only if we're enforcing access!
                     && !this.plugin.getMVPerms().hasPermission(p, "multiverse.access." + p.getWorld().getName(), false)) {
                 p.sendMessage("[MV] - Sorry you can't be in this world anymore!");
-                this.sendPlayerToDefaultWorld(p);
+                event.setSpawnLocation(plugin.getMVWorldManager().getFirstSpawnWorld().getSpawnLocation());
             }
         }
         // Handle the Players GameMode setting for the new world.
@@ -305,27 +305,8 @@ public class MVPlayerListener implements Listener {
                     + "' because enforceaccess is off.");
         }
         if (!plugin.getMVConfig().isUsingDefaultPortalSearch()) {
-            try {
-                Class.forName("org.bukkit.TravelAgent");
-                if (event.getPortalTravelAgent() != null) {
-                    event.getPortalTravelAgent().setSearchRadius(plugin.getMVConfig().getPortalSearchRadius());
-                }
-            } catch (ClassNotFoundException ignore) {
-                plugin.log(Level.FINE, "TravelAgent not available for PlayerPortalEvent for " + event.getPlayer().getName());
-            }
-
+            event.setSearchRadius(plugin.getMVConfig().getPortalSearchRadius());
         }
-    }
-
-    private void sendPlayerToDefaultWorld(final Player player) {
-        // Remove the player 1 tick after the login. I'm sure there's GOT to be a better way to do this...
-        this.plugin.getServer().getScheduler().scheduleSyncDelayedTask(this.plugin,
-            new Runnable() {
-                @Override
-                public void run() {
-                    player.teleport(plugin.getMVWorldManager().getFirstSpawnWorld().getSpawnLocation());
-                }
-            }, 1L);
     }
 
     // FOLLOWING 2 Methods and Private class handle Per Player GameModes.

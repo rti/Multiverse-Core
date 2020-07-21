@@ -32,7 +32,6 @@ import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
@@ -49,6 +48,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.io.File;
 
@@ -60,7 +60,7 @@ import static org.mockito.Mockito.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ PluginManager.class, MultiverseCore.class, Permission.class, Bukkit.class,
         WeatherChangeEvent.class, ThunderChangeEvent.class, AsyncPlayerChatEvent.class,
-        PlayerJoinEvent.class, PlayerRespawnEvent.class, EntityRegainHealthEvent.class,
+        PlayerSpawnLocationEvent.class, PlayerRespawnEvent.class, EntityRegainHealthEvent.class,
         FoodLevelChangeEvent.class, WorldManager.class, PluginDescriptionFile.class, JavaPluginLoader.class })
 @PowerMockIgnore("javax.script.*")
 public class TestWorldProperties {
@@ -76,8 +76,8 @@ public class TestWorldProperties {
     private Player mockPlayer;
     private AsyncPlayerChatEvent playerChatEvent;
     private Player mockNewPlayer;
-    private PlayerJoinEvent playerNewJoinEvent;
-    private PlayerJoinEvent playerJoinEvent;
+    private PlayerSpawnLocationEvent playerNewSpawnLocationEvent;
+    private PlayerSpawnLocationEvent playerSpawnLocationEvent;
     private PlayerRespawnEvent playerRespawnBed;
     private PlayerRespawnEvent playerRespawnNormal;
     private HumanEntity mockHumanEntity;
@@ -193,11 +193,11 @@ public class TestWorldProperties {
         ((MVAsyncPlayerChatListener) core.getChatListener()).playerChat(playerChatEvent);
         verify(playerChatEvent, times(1)).setFormat(anyString()); // only ONE TIME (not the 2nd time!)
 
-        // call player join events
-        core.getPlayerListener().playerJoin(playerJoinEvent);
-        verify(mockPlayer, never()).teleport(any(Location.class));
-        core.getPlayerListener().playerJoin(playerNewJoinEvent);
-        verify(mockNewPlayer).teleport(worldManager.getFirstSpawnWorld().getSpawnLocation());
+        // call player spawn location events
+        core.getPlayerListener().playerSpawnLocation(playerSpawnLocationEvent);
+        verify(playerSpawnLocationEvent, never()).setSpawnLocation(any(Location.class));
+        core.getPlayerListener().playerSpawnLocation(playerNewSpawnLocationEvent);
+        verify(playerNewSpawnLocationEvent).setSpawnLocation(worldManager.getFirstSpawnWorld().getSpawnLocation());
 
         // call player respawn events
         core.getPlayerListener().playerRespawn(playerRespawnBed);
@@ -293,11 +293,11 @@ public class TestWorldProperties {
         verify(playerChatEvent, times(1)).setFormat(anyString()); // only ONE TIME (not the 2nd time!)
         mvWorld.setHidden(true); // reset hidden-state
 
-        // call player join events
-        core.getPlayerListener().playerJoin(playerJoinEvent);
-        verify(mockPlayer, never()).teleport(any(Location.class));
-        core.getPlayerListener().playerJoin(playerNewJoinEvent);
-        verify(mockNewPlayer).teleport(new SpawnLocation(1, 1, 1));
+        // call player spawn location events
+        core.getPlayerListener().playerSpawnLocation(playerSpawnLocationEvent);
+        verify(playerSpawnLocationEvent, never()).setSpawnLocation(any(Location.class));
+        core.getPlayerListener().playerSpawnLocation(playerNewSpawnLocationEvent);
+        verify(playerNewSpawnLocationEvent).setSpawnLocation(new SpawnLocation(1, 1, 1));
 
         // call player respawn events
         core.getPlayerListener().playerRespawn(playerRespawnBed);
@@ -369,13 +369,13 @@ public class TestWorldProperties {
         playerChatEvent = PowerMockito.mock(AsyncPlayerChatEvent.class);
         when(playerChatEvent.getPlayer()).thenReturn(mockPlayer);
         when(playerChatEvent.getFormat()).thenReturn("format");
-        // player join
+        // player spawn location
         mockNewPlayer = mock(Player.class);
         when(mockNewPlayer.hasPlayedBefore()).thenReturn(false);
-        playerJoinEvent = PowerMockito.mock(PlayerJoinEvent.class);
-        when(playerJoinEvent.getPlayer()).thenReturn(mockPlayer);
-        playerNewJoinEvent = PowerMockito.mock(PlayerJoinEvent.class);
-        when(playerNewJoinEvent.getPlayer()).thenReturn(mockNewPlayer);
+        playerSpawnLocationEvent = PowerMockito.mock(PlayerSpawnLocationEvent.class);
+        when(playerSpawnLocationEvent.getPlayer()).thenReturn(mockPlayer);
+        playerNewSpawnLocationEvent = PowerMockito.mock(PlayerSpawnLocationEvent.class);
+        when(playerNewSpawnLocationEvent.getPlayer()).thenReturn(mockNewPlayer);
         // player respawn
         playerRespawnBed = PowerMockito.mock(PlayerRespawnEvent.class);
         when(playerRespawnBed.getPlayer()).thenReturn(mockPlayer);
